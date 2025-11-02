@@ -1,13 +1,14 @@
 {
   "name": "koishi-plugin-mcsm-status",
   "description": "Koishi 插件，用于获取 MCSManager 面板节点状态并渲染为图片。",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "files": [
     "lib",
     "dist"
   ],
+  "homepage": "https://github.com/muyni233/koishi-plugin-mcsm-status",
   "license": "MIT",
   "keywords": [
     "chatbot",
