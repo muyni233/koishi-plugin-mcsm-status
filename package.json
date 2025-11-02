@@ -1,7 +1,7 @@
 {
   "name": "koishi-plugin-mcsm-status",
   "description": "Koishi 插件，用于获取 MCSManager 面板节点状态并渲染为图片。",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "files": [
@@ -17,6 +17,7 @@
     "status"
   ],
   "peerDependencies": {
-    "koishi": "^4.18.7"
+    "koishi": "^4.18.7",
+    "koishi-plugin-puppeteer": "^3.7.3"
   }
 }
