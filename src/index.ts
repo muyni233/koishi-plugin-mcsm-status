@@ -1,85 +1,121 @@
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-var __export = (target, all) => {
-  for (var name2 in all)
-    __defProp(target, name2, { get: all[name2], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+import { Context, Schema, Session, segment } from 'koishi'
 
-// src/index.ts
-var src_exports = {};
-__export(src_exports, {
-  Config: () => Config,
-  apply: () => apply,
-  inject: () => inject,
-  name: () => name
-});
-module.exports = __toCommonJS(src_exports);
-var import_koishi = require("koishi");
-var name = "mcsm-status";
-var inject = ["puppeteer"];
-var Config = import_koishi.Schema.object({
-  mcsmUrl: import_koishi.Schema.string().description("MCSM面板地址").default("http://localhost:23333"),
-  apiKey: import_koishi.Schema.string().description("MCSM面板API密钥"),
-  useProxyAPI: import_koishi.Schema.boolean().description("使用代理API获取数据(自用)").default(false),
-  proxyAPIUrl: import_koishi.Schema.string().description("代理API地址").default(""),
-  daemonUuid: import_koishi.Schema.string().description("节点Daemon ID，留空获取所有节点"),
-  title: import_koishi.Schema.string().description("页面标题").default("MCSManager 节点状态"),
-  highLoadThreshold: import_koishi.Schema.number().description("高负载阈值（百分比）").default(85),
-  timeout: import_koishi.Schema.number().description("API请求超时时间（毫秒）").default(1e4)
-});
-async function apply(ctx, config) {
-  const fetchWithTimeout = /* @__PURE__ */ __name((url, options, timeout) => {
+declare module 'koishi' {
+  interface Context {
+    puppeteer: {
+      page: () => Promise<{
+        setContent: (html: string, options?: { waitUntil?: string }) => Promise<void>;
+        setViewport: (viewport: { width: number; height: number; deviceScaleFactor: number }) => Promise<void>;
+        screenshot: (options: { type: 'png'; fullPage: boolean }) => Promise<Buffer>;
+        close: () => Promise<void>;
+      }>;
+    }
+  }
+}
+
+export const name = 'mcsm-status'
+export const inject = ['puppeteer']
+
+export interface Config {
+  mcsmUrl: string
+  apiKey: string
+  useProxyAPI?: boolean
+  proxyAPIUrl?: string
+  daemonUuid?: string 
+  title?: string
+  highLoadThreshold?: number 
+  timeout?: number
+}
+
+export const Config: Schema<Config> = Schema.object({
+  mcsmUrl: Schema.string().description('MCSM面板地址').default('http://localhost:23333'),
+  apiKey: Schema.string().description('MCSM面板API密钥'),
+  useProxyAPI: Schema.boolean().description('使用代理API获取数据(自用)').default(false),
+  proxyAPIUrl: Schema.string().description('代理API地址').default(''),
+  daemonUuid: Schema.string().description('节点Daemon ID，留空获取所有节点'),
+  title: Schema.string().description('页面标题').default('MCSManager 节点状态'),
+  highLoadThreshold: Schema.number().description('高负载阈值（百分比）').default(85),
+  timeout: Schema.number().description('API请求超时时间（毫秒）').default(10000),
+})
+
+interface NodeInfo {
+  uuid: string
+  name: string
+  address: string
+  port: number
+  status: string
+  cpuUsage: number
+  memoryUsage: number
+  maxMemory: number
+  instanceCount: number
+  runningInstanceCount?: number  
+  hostname?: string 
+  system?: string 
+  version?: string
+  uptime?: number 
+  cpuMemChart?: Array<{cpu: number, mem: number}>
+}
+
+interface InstanceInfo {
+  uuid: string
+  name: string
+  status: string
+  nodeUuid: string
+}
+
+export async function apply(ctx: Context, config: Config) {
+  const fetchWithTimeout = (url: string, options: RequestInit, timeout: number) => {
     return Promise.race([
       fetch(url, options),
-      new Promise(
-        (_, reject) => setTimeout(() => reject(new Error("API请求超时")), timeout)
-      )
-    ]);
-  }, "fetchWithTimeout");
-  const generateHtmlContent = /* @__PURE__ */ __name((nodes, instances) => {
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('API请求超时')), timeout)
+      ) as Promise<Response>
+    ])
+  }
+
+  // HTML 生成函数 - UI 已美化
+  const generateHtmlContent = (nodes: NodeInfo[], instances: InstanceInfo[]): string => {
     const totalNodes = nodes.length;
-    const onlineNodes = nodes.filter((n) => n.status === "online").length;
+    const onlineNodes = nodes.filter(n => n.status === 'online').length;
     const totalInstances = nodes.reduce((sum, node) => sum + (node.instanceCount || 0), 0);
     const runningInstances = nodes.reduce((sum, node) => sum + (node.runningInstanceCount || 0), 0);
-    const escapeHtml = /* @__PURE__ */ __name((str) => {
-      if (str === null || str === void 0) return "";
-      return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;").replace(/\//g, "&#x2F;");
-    }, "escapeHtml");
-    const generateNodeHtml = /* @__PURE__ */ __name((node) => {
+    
+    const escapeHtml = (str: any): string => {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;')
+        .replace(/\//g, '&#x2F;');
+    };
+    
+    // 生成单个节点的HTML
+    const generateNodeHtml = (node: NodeInfo): string => {
       const cpuPercent = node.cpuUsage;
       const cpuPercentRounded = parseFloat(node.cpuUsage.toFixed(1));
-      const memoryPercent = node.maxMemory > 0 ? parseFloat((node.memoryUsage / node.maxMemory * 100).toFixed(1)) : 0;
+      const memoryPercent = node.maxMemory > 0 ? parseFloat(((node.memoryUsage / node.maxMemory) * 100).toFixed(1)) : 0;
       const isHighLoad = cpuPercentRounded >= (config.highLoadThreshold || 85) || memoryPercent >= (config.highLoadThreshold || 85);
+      
       return `
-        <div class="node ${node.status === "offline" ? "node-offline" : ""}">
+        <div class="node ${node.status === 'offline' ? 'node-offline' : ''}">
           <div class="node-header">
             <div class="node-title-group">
                 <div class="node-icon">
-                    ${node.status === "online" ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M7 7l10 10"/></svg>' : (
-        // 只是个占位图标，实际用CSS画
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>'
-      )}
+                    ${node.status === 'online' ? 
+                        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M7 7l10 10"/></svg>' : // 只是个占位图标，实际用CSS画
+                        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>'
+                    }
                 </div>
                 <div>
                     <div class="node-name">${escapeHtml(node.name)}</div>
                     <div class="node-subtitle">${escapeHtml(node.address)}:${node.port}</div>
                 </div>
             </div>
-            <div class="status-badge ${node.status === "online" ? isHighLoad ? "status-warning" : "status-success" : "status-danger"}">
+            <div class="status-badge ${node.status === 'online' ? (isHighLoad ? 'status-warning' : 'status-success') : 'status-danger'}">
               <span class="status-dot"></span>
-              ${node.status === "online" ? isHighLoad ? "高负载" : "运行中" : "离线"}
+              ${node.status === 'online' ? (isHighLoad ? '高负载' : '运行中') : '离线'}
             </div>
           </div>
           
@@ -88,11 +124,11 @@ async function apply(ctx, config) {
                 <!-- Info Chips -->
                 <div class="info-chip">
                   <span class="chip-label">OS</span>
-                  <span class="chip-value">${escapeHtml(node.system || "Unknown")}</span>
+                  <span class="chip-value">${escapeHtml(node.system || 'Unknown')}</span>
                 </div>
                 <div class="info-chip">
                   <span class="chip-label">Ver</span>
-                  <span class="chip-value" title="${escapeHtml(node.version)}">${escapeHtml(node.version || "Unknown").split(" ")[0]}</span>
+                  <span class="chip-value" title="${escapeHtml(node.version)}">${escapeHtml(node.version || 'Unknown').split(' ')[0]}</span>
                 </div>
                 <div class="info-chip">
                   <span class="chip-label">实例</span>
@@ -106,7 +142,7 @@ async function apply(ctx, config) {
                     <span class="metric-value">${cpuPercentRounded}%</span>
                   </div>
                   <div class="progress-track">
-                    <div class="progress-fill ${cpuPercentRounded > 80 ? "fill-danger" : "fill-primary"}" style="width: ${cpuPercentRounded}%"></div>
+                    <div class="progress-fill ${cpuPercentRounded > 80 ? 'fill-danger' : 'fill-primary'}" style="width: ${cpuPercentRounded}%"></div>
                   </div>
                 </div>
 
@@ -114,10 +150,10 @@ async function apply(ctx, config) {
                 <div class="metric-item full-width">
                   <div class="metric-header">
                     <span class="metric-label">内存使用</span>
-                    <span class="metric-value">${node.memoryUsage ? parseFloat(node.memoryUsage.toFixed(1)) : "0"} / ${node.maxMemory ? parseFloat(node.maxMemory.toFixed(1)) : "0"} GB</span>
+                    <span class="metric-value">${node.memoryUsage ? parseFloat(node.memoryUsage.toFixed(1)) : '0'} / ${node.maxMemory ? parseFloat(node.maxMemory.toFixed(1)) : '0'} GB</span>
                   </div>
                   <div class="progress-track">
-                    <div class="progress-fill ${memoryPercent > 85 ? "fill-danger" : "fill-success"}" style="width: ${memoryPercent}%"></div>
+                    <div class="progress-fill ${memoryPercent > 85 ? 'fill-danger' : 'fill-success'}" style="width: ${memoryPercent}%"></div>
                   </div>
                 </div>
             </div>
@@ -128,8 +164,13 @@ async function apply(ctx, config) {
           </div>
         </div>
       `;
-    }, "generateNodeHtml");
-    const nodesHtml = nodes.length > 0 ? nodes.map((node) => generateNodeHtml(node)).join("") : '<div class="empty-state">暂无节点信息</div>';
+    };
+    
+    // 生成所有节点的HTML
+    const nodesHtml = nodes.length > 0 
+      ? nodes.map(node => generateNodeHtml(node)).join('')
+      : '<div class="empty-state">暂无节点信息</div>';
+    
     return `
 <!DOCTYPE html>
 <html>
@@ -393,11 +434,11 @@ async function apply(ctx, config) {
   <div class="container">
     <div class="header">
       <div class="header-title">
-        <h1>${escapeHtml(config.title || "MCSManager Monitor")}</h1>
+        <h1>${escapeHtml(config.title || 'MCSManager Monitor')}</h1>
         <p>System Status Dashboard</p>
       </div>
       <div class="header-time">
-        ${(/* @__PURE__ */ new Date()).toLocaleString("zh-CN", { hour12: false })}
+        ${new Date().toLocaleString('zh-CN', { hour12: false })}
       </div>
     </div>
 
@@ -512,225 +553,253 @@ async function apply(ctx, config) {
 </body>
 </html>
     `;
-  }, "generateHtmlContent");
-  const renderToImage = /* @__PURE__ */ __name(async (html) => {
+  }
+  
+  const renderToImage = async (html: string): Promise<Buffer> => {
     const page = await ctx.puppeteer.page();
     try {
-      await page.setContent(html, { waitUntil: "networkidle0" });
-      await page.setViewport({
-        width: 900,
-        // 略微增加宽度以适应新布局
-        height: 600,
-        deviceScaleFactor: 2
+      await page.setContent(html, { waitUntil: 'networkidle0' });
+      await page.setViewport({ 
+        width: 900, // 略微增加宽度以适应新布局
+        height: 600, 
+        deviceScaleFactor: 2 
       });
-      const screenshot = await page.screenshot({
-        type: "png",
-        fullPage: true
+      
+      const screenshot = await page.screenshot({ 
+        type: 'png',
+        fullPage: true 
       });
+      
       return screenshot;
     } finally {
-      await page.close().catch(() => {
-      });
+      await page.close().catch(() => {}); 
     }
-  }, "renderToImage");
-  ctx.command("mcsm-status", "获取MCSM节点状态").action(async ({ session }) => {
-    try {
-      const officialConfig = { ...config, useProxyAPI: false };
-      if (!officialConfig.apiKey) return "错误：未配置MCSM API密钥";
-      if (!officialConfig.mcsmUrl) return "错误：未配置MCSM面板地址";
-      const fetchOfficialNodesStatus = /* @__PURE__ */ __name(async () => {
-        try {
-          let url = `${officialConfig.mcsmUrl}/api/overview?apikey=${officialConfig.apiKey}`;
-          const headers = { "Content-Type": "application/json" };
-          const response = await fetchWithTimeout(url, { method: "GET", headers }, officialConfig.timeout);
-          if (!response.ok) throw new Error(`获取节点列表失败: ${response.status}`);
-          const result = await response.json();
-          const data = result.data || result;
-          const nodes2 = [];
-          if (data && data.remote && Array.isArray(data.remote)) {
-            for (const node of data.remote) {
-              const systemInfo = node.system || {};
-              const instanceInfo = node.instance || {};
-              const configInfo = node.config || {};
-              const isOnline = node.available;
-              nodes2.push({
-                uuid: node.uuid || node.id || "",
-                name: node.nickname || node.remarks || node.name || `节点 ${node.ip || "?"}:${configInfo.port || "?"}`,
-                address: node.ip || "unknown",
-                port: configInfo.port || node.port || 24444,
-                status: isOnline ? "online" : "offline",
-                cpuUsage: parseFloat(((systemInfo.cpuUsage || 0) * 100).toFixed(1)),
-                memoryUsage: parseFloat((((systemInfo.totalmem || 0) - (systemInfo.freemem || 0)) / (1024 * 1024 * 1024)).toFixed(1)) || 0,
-                maxMemory: parseFloat(((systemInfo.totalmem || 0) / (1024 * 1024 * 1024)).toFixed(1)) || 0,
-                runningInstanceCount: instanceInfo.running || 0,
-                instanceCount: instanceInfo.total || 0,
-                hostname: systemInfo.hostname || "Unknown",
-                system: systemInfo.type || systemInfo.platform || "Unknown",
-                version: systemInfo.version || systemInfo.release || "",
-                uptime: systemInfo.uptime || 0,
-                cpuMemChart: node.cpuMemChart || []
-              });
-            }
-          }
-          return nodes2;
-        } catch (error) {
-          ctx.logger.error("获取节点列表时出错:", error);
-          throw error;
-        }
-      }, "fetchOfficialNodesStatus");
-      const fetchOfficialInstancesStatus = /* @__PURE__ */ __name(async () => {
-        try {
-          let url = `${officialConfig.mcsmUrl}/api/overview?apikey=${officialConfig.apiKey}`;
-          const headers = { "Content-Type": "application/json" };
-          const response = await fetchWithTimeout(url, { method: "GET", headers }, officialConfig.timeout);
-          if (!response.ok) throw new Error(`获取实例列表失败: ${response.status}`);
-          const result = await response.json();
-          const data = result.data || result;
-          const instances2 = [];
-          if (data && data.remote && Array.isArray(data.remote)) {
-            for (const node of data.remote) {
-              if (node.instances && Array.isArray(node.instances)) {
-                for (const instance of node.instances) {
-                  instances2.push({
-                    uuid: instance.uuid || instance.instanceUuid,
-                    name: instance.name || instance.config?.name || instance.instanceName || "未知实例",
-                    status: instance.status || instance.state || instance.running || "unknown",
-                    nodeUuid: node.uuid || node.id || ""
-                  });
-                }
-              }
-            }
-          }
-          if (instances2.length === 0 && data && data.chart && data.chart.request) {
-            const requestInfo = data.chart.request[0] || data.chart.request;
-            if (requestInfo && requestInfo.runningInstance !== void 0) {
-              for (let i = 0; i < (requestInfo.runningInstance || 0); i++) {
-                instances2.push({ uuid: `s-${i}`, name: `Inst ${i}`, status: "running", nodeUuid: "s" });
-              }
-            }
-          }
-          return instances2;
-        } catch (error) {
-          ctx.logger.error("获取实例列表时出错:", error);
-          throw error;
-        }
-      }, "fetchOfficialInstancesStatus");
-      const [nodes, instances] = await Promise.all([
-        fetchOfficialNodesStatus().catch((err) => []),
-        fetchOfficialInstancesStatus().catch((err) => [])
-      ]);
-      const htmlContent = generateHtmlContent(nodes, instances);
-      const imageBuffer = await renderToImage(htmlContent);
-      return import_koishi.segment.image("data:image/png;base64," + imageBuffer.toString("base64"));
-    } catch (error) {
-      ctx.logger.error("生成图片时出错:", error);
-      return "获取服务器状态失败: " + error.message;
-    }
-  });
-  if (config.useProxyAPI) {
-    ctx.command("mcsm-status-api", "获取MCSM节点状态（使用代理API）").action(async ({ session }) => {
+  }
+
+  // 只使用官方API的指令
+  ctx.command('mcsm-status', '获取MCSM节点状态')
+    .action(async ({ session }: { session: Session }) => {
       try {
-        const fetchProxyNodesStatus = /* @__PURE__ */ __name(async () => {
+        const officialConfig = { ...config, useProxyAPI: false };
+        
+        if (!officialConfig.apiKey) return '错误：未配置MCSM API密钥'
+        if (!officialConfig.mcsmUrl) return '错误：未配置MCSM面板地址'
+
+        const fetchOfficialNodesStatus = async (): Promise<NodeInfo[]> => {
           try {
-            let url = config.proxyAPIUrl || "";
-            const headers = {
-              "Content-Type": "application/json",
-              "User-Agent": "Koishi-MCSM-Status-Bot/1.0"
-            };
-            const response = await fetchWithTimeout(url, { method: "GET", headers }, config.timeout);
+            let url = `${officialConfig.mcsmUrl}/api/overview?apikey=${officialConfig.apiKey}`;
+            const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+
+            const response = await fetchWithTimeout(url, { method: 'GET', headers }, officialConfig.timeout);
             if (!response.ok) throw new Error(`获取节点列表失败: ${response.status}`);
+
             const result = await response.json();
-            const data = { remote: Array.isArray(result.data) ? result.data : [], chart: result.chart || {} };
-            const nodes2 = [];
+            const data = result.data || result;
+            const nodes: NodeInfo[] = [];
+            
             if (data && data.remote && Array.isArray(data.remote)) {
               for (const node of data.remote) {
                 const systemInfo = node.system || {};
                 const instanceInfo = node.instance || {};
-                const isOnline = node.system && node.system.uptime !== void 0;
-                nodes2.push({
-                  uuid: node.uuid || node.id || "",
-                  name: node.nickname || node.remarks || node.name || `节点 ${node.ip || "?"}:${node.port || "?"}`,
-                  address: node.ip || "unknown",
-                  port: node.port || 24444,
-                  status: isOnline ? "online" : "offline",
-                  cpuUsage: parseFloat(((systemInfo.cpuUsage || 0) * 100).toFixed(1)),
-                  memoryUsage: parseFloat((((systemInfo.totalmem || 0) - (systemInfo.freemem || 0)) / (1024 * 1024 * 1024)).toFixed(1)) || 0,
-                  maxMemory: parseFloat(((systemInfo.totalmem || 0) / (1024 * 1024 * 1024)).toFixed(1)) || 0,
-                  runningInstanceCount: instanceInfo.running || 0,
-                  instanceCount: instanceInfo.total || 0,
-                  hostname: systemInfo.hostname || "Unknown",
-                  system: systemInfo.type || systemInfo.platform || "Unknown",
-                  version: systemInfo.version || systemInfo.release || "",
+                const configInfo = node.config || {};
+                const isOnline = node.available;
+                
+                nodes.push({
+                  uuid: node.uuid || node.id || '',
+                  name: node.nickname || node.remarks || node.name || `节点 ${node.ip || '?'}:${configInfo.port || '?'}`,
+                  address: node.ip || 'unknown',
+                  port: configInfo.port || node.port || 24444,
+                  status: isOnline ? 'online' : 'offline',
+                  cpuUsage: parseFloat(((systemInfo.cpuUsage || 0) * 100).toFixed(1)), 
+                  memoryUsage: parseFloat((((systemInfo.totalmem || 0) - (systemInfo.freemem || 0)) / (1024 * 1024 * 1024)).toFixed(1)) || 0, 
+                  maxMemory: parseFloat(((systemInfo.totalmem || 0) / (1024 * 1024 * 1024)).toFixed(1)) || 0, 
+                  runningInstanceCount: instanceInfo.running || 0, 
+                  instanceCount: instanceInfo.total || 0, 
+                  hostname: systemInfo.hostname || 'Unknown',
+                  system: systemInfo.type || systemInfo.platform || 'Unknown',
+                  version: systemInfo.version || systemInfo.release || '',
                   uptime: systemInfo.uptime || 0,
                   cpuMemChart: node.cpuMemChart || []
                 });
               }
             }
-            return nodes2;
+            return nodes;
           } catch (error) {
-            ctx.logger.error("获取节点列表时出错:", error);
+            ctx.logger.error('获取节点列表时出错:', error);
             throw error;
           }
-        }, "fetchProxyNodesStatus");
-        const fetchProxyInstancesStatus = /* @__PURE__ */ __name(async () => {
+        }
+
+        const fetchOfficialInstancesStatus = async (): Promise<InstanceInfo[]> => {
           try {
-            let url = config.proxyAPIUrl || "https://api.eqad.fun/mcsm/api/services";
-            const headers = {
-              "Content-Type": "application/json",
-              "User-Agent": "Koishi-MCSM-Status-Bot/1.0"
-            };
-            const response = await fetchWithTimeout(url, { method: "GET", headers }, config.timeout);
+            let url = `${officialConfig.mcsmUrl}/api/overview?apikey=${officialConfig.apiKey}`;
+            const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+
+            const response = await fetchWithTimeout(url, { method: 'GET', headers }, officialConfig.timeout);
             if (!response.ok) throw new Error(`获取实例列表失败: ${response.status}`);
+
             const result = await response.json();
-            const data = { remote: Array.isArray(result.data) ? result.data : [], chart: result.chart || {} };
-            const instances2 = [];
+            const data = result.data || result;
+            const instances: InstanceInfo[] = [];
+            
             if (data && data.remote && Array.isArray(data.remote)) {
               for (const node of data.remote) {
                 if (node.instances && Array.isArray(node.instances)) {
                   for (const instance of node.instances) {
-                    instances2.push({
+                    instances.push({
                       uuid: instance.uuid || instance.instanceUuid,
-                      name: instance.name || instance.config?.name || instance.instanceName || "未知实例",
-                      status: instance.status || instance.state || instance.running || "unknown",
-                      nodeUuid: node.uuid || node.id || ""
+                      name: instance.name || instance.config?.name || instance.instanceName || '未知实例',
+                      status: instance.status || instance.state || instance.running || 'unknown',
+                      nodeUuid: node.uuid || node.id || '' 
                     });
                   }
                 }
               }
             }
-            if (instances2.length === 0 && data && data.chart && data.chart.request) {
-              const requestInfo = data.chart.request[0] || data.chart.request;
-              if (requestInfo && requestInfo.runningInstance !== void 0) {
-                for (let i = 0; i < (requestInfo.runningInstance || 0); i++) {
-                  instances2.push({ uuid: `s-${i}`, name: `Inst ${i}`, status: "running", nodeUuid: "s" });
-                }
-              }
+            
+            // 补充统计数据作为虚拟实例（如果API返回了）
+            if (instances.length === 0 && data && data.chart && data.chart.request) {
+               const requestInfo = data.chart.request[0] || data.chart.request; 
+               if (requestInfo && requestInfo.runningInstance !== undefined) {
+                 for (let i = 0; i < (requestInfo.runningInstance || 0); i++) {
+                   instances.push({ uuid: `s-${i}`, name: `Inst ${i}`, status: 'running', nodeUuid: 's' });
+                 }
+               }
             }
-            return instances2;
+
+            return instances;
           } catch (error) {
-            ctx.logger.error("获取实例列表时出错:", error);
+            ctx.logger.error('获取实例列表时出错:', error);
             throw error;
           }
-        }, "fetchProxyInstancesStatus");
+        }
+
         const [nodes, instances] = await Promise.all([
-          fetchProxyNodesStatus().catch((err) => []),
-          fetchProxyInstancesStatus().catch((err) => [])
+          fetchOfficialNodesStatus().catch(err => []),
+          fetchOfficialInstancesStatus().catch(err => [])
         ]);
-        const htmlContent = generateHtmlContent(nodes, instances);
-        const imageBuffer = await renderToImage(htmlContent);
-        return import_koishi.segment.image("data:image/png;base64," + imageBuffer.toString("base64"));
+
+        const htmlContent = generateHtmlContent(nodes, instances)
+        const imageBuffer = await renderToImage(htmlContent)
+
+        return segment.image('data:image/png;base64,' + imageBuffer.toString('base64'));
       } catch (error) {
-        ctx.logger.error("生成图片时出错:", error);
-        return "获取服务器状态失败: " + error.message;
+        ctx.logger.error('生成图片时出错:', error)
+        return '获取服务器状态失败: ' + error.message
       }
-    });
+    })
+
+  // 当启用代理API时注册代理指令
+  if (config.useProxyAPI) {
+    // 变更：mcsm-status-proxy -> mcsm-status-api
+    ctx.command('mcsm-status-api', '获取MCSM节点状态（使用代理API）')
+      .action(async ({ session }: { session: Session }) => {
+        try {
+          const fetchProxyNodesStatus = async (): Promise<NodeInfo[]> => {
+            try {
+              let url: string = config.proxyAPIUrl || '';
+              const headers: Record<string, string> = {
+                'Content-Type': 'application/json',
+                'User-Agent': 'Koishi-MCSM-Status-Bot/1.0'
+              };
+
+              const response = await fetchWithTimeout(url, { method: 'GET', headers }, config.timeout);
+              if (!response.ok) throw new Error(`获取节点列表失败: ${response.status}`);
+
+              const result = await response.json();
+              const data = { remote: Array.isArray(result.data) ? result.data : [], chart: result.chart || {} };
+              const nodes: NodeInfo[] = [];
+              
+              if (data && data.remote && Array.isArray(data.remote)) {
+                for (const node of data.remote) {
+                  const systemInfo = node.system || {};
+                  const instanceInfo = node.instance || {};
+                  const isOnline = (node.system && node.system.uptime !== undefined);
+                  
+                  nodes.push({
+                    uuid: node.uuid || node.id || '',
+                    name: node.nickname || node.remarks || node.name || `节点 ${node.ip || '?'}:${node.port || '?'}`,
+                    address: node.ip || 'unknown',
+                    port: node.port || 24444,
+                    status: isOnline ? 'online' : 'offline',
+                    cpuUsage: parseFloat(((systemInfo.cpuUsage || 0) * 100).toFixed(1)), 
+                    memoryUsage: parseFloat((((systemInfo.totalmem || 0) - (systemInfo.freemem || 0)) / (1024 * 1024 * 1024)).toFixed(1)) || 0, 
+                    maxMemory: parseFloat(((systemInfo.totalmem || 0) / (1024 * 1024 * 1024)).toFixed(1)) || 0, 
+                    runningInstanceCount: instanceInfo.running || 0, 
+                    instanceCount: instanceInfo.total || 0, 
+                    hostname: systemInfo.hostname || 'Unknown',
+                    system: systemInfo.type || systemInfo.platform || 'Unknown',
+                    version: systemInfo.version || systemInfo.release || '',
+                    uptime: systemInfo.uptime || 0,
+                    cpuMemChart: node.cpuMemChart || []
+                  });
+                }
+              }
+              return nodes;
+            } catch (error) {
+              ctx.logger.error('获取节点列表时出错:', error);
+              throw error;
+            }
+          }
+
+          const fetchProxyInstancesStatus = async (): Promise<InstanceInfo[]> => {
+            try {
+              let url: string = config.proxyAPIUrl || 'https://api.eqad.fun/mcsm/api/services';
+              const headers: Record<string, string> = {
+                'Content-Type': 'application/json',
+                'User-Agent': 'Koishi-MCSM-Status-Bot/1.0'
+              };
+
+              const response = await fetchWithTimeout(url, { method: 'GET', headers }, config.timeout);
+              if (!response.ok) throw new Error(`获取实例列表失败: ${response.status}`);
+
+              const result = await response.json();
+              const data = { remote: Array.isArray(result.data) ? result.data : [], chart: result.chart || {} };
+              const instances: InstanceInfo[] = [];
+              
+              if (data && data.remote && Array.isArray(data.remote)) {
+                for (const node of data.remote) {
+                  if (node.instances && Array.isArray(node.instances)) {
+                    for (const instance of node.instances) {
+                      instances.push({
+                        uuid: instance.uuid || instance.instanceUuid,
+                        name: instance.name || instance.config?.name || instance.instanceName || '未知实例',
+                        status: instance.status || instance.state || instance.running || 'unknown',
+                        nodeUuid: node.uuid || node.id || '' 
+                      });
+                    }
+                  }
+                }
+              }
+
+              if (instances.length === 0 && data && data.chart && data.chart.request) {
+                const requestInfo = data.chart.request[0] || data.chart.request; 
+                if (requestInfo && requestInfo.runningInstance !== undefined) {
+                  for (let i = 0; i < (requestInfo.runningInstance || 0); i++) {
+                    instances.push({ uuid: `s-${i}`, name: `Inst ${i}`, status: 'running', nodeUuid: 's' });
+                  }
+                }
+              }
+              return instances;
+            } catch (error) {
+              ctx.logger.error('获取实例列表时出错:', error);
+              throw error;
+            }
+          }
+
+          const [nodes, instances] = await Promise.all([
+            fetchProxyNodesStatus().catch(err => []),
+            fetchProxyInstancesStatus().catch(err => [])
+          ])
+
+          const htmlContent = generateHtmlContent(nodes, instances)
+          const imageBuffer = await renderToImage(htmlContent)
+
+          return segment.image('data:image/png;base64,' + imageBuffer.toString('base64'));
+        } catch (error) {
+          ctx.logger.error('生成图片时出错:', error)
+          return '获取服务器状态失败: ' + error.message
+        }
+      })
   }
 }
-__name(apply, "apply");
-// Annotate the CommonJS export names for ESM import in node:
-0 && (module.exports = {
-  Config,
-  apply,
-  inject,
-  name
-});
