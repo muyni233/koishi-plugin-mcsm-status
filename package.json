@@ -1,7 +1,7 @@
 {
   "name": "koishi-plugin-mcsm-status",
   "description": "Koishi 插件，用于获取 MCSManager 面板节点状态并渲染为图片。",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "files": [
