@@ -114,6 +114,7 @@ interface ThemeTokens {
     chartCpuFill: string
     chartMem: string
     chartMemFill: string
+    memContainer: string
 }
 
 export type ThemeName = 'purple' | 'blue' | 'green' | 'rose' | 'dark'
@@ -128,60 +129,60 @@ const THEMES: Record<ThemeName, ThemeTokens> = {
         surface: '#FFFBFE', surfaceContainerLowest: '#FFFFFF', surfaceContainerLow: '#F7F2FA',
         surfaceContainer: '#F3EDF7', surfaceContainerHigh: '#ECE6F0', surfaceContainerHighest: '#E6E0E9',
         onSurface: '#1D1B20', onSurfaceVariant: '#49454F', outline: '#79747E', outlineVariant: '#CAC4D0',
-        good: '#386A20', goodContainer: '#C3EFAB', onGoodContainer: '#042100',
-        caution: '#6D5E00', cautionContainer: '#FBE365', onCautionContainer: '#211B00',
+        good: '#2E7D32', goodContainer: '#C8E6C9', onGoodContainer: '#042100',
+        caution: '#7B6B00', cautionContainer: '#F2E4A1', onCautionContainer: '#241A00',
         elev1: '0 1px 3px 1px rgba(0,0,0,0.15), 0 1px 2px 0 rgba(0,0,0,0.3)',
         elev2: '0 2px 6px 2px rgba(0,0,0,0.15), 0 1px 2px 0 rgba(0,0,0,0.3)',
         chartCpu: '#6750A4', chartCpuFill: 'rgba(103,80,164,0.20)',
-        chartMem: '#7D5260', chartMemFill: 'rgba(125,82,96,0.16)',
+        chartMem: '#26A69A', chartMemFill: 'rgba(38,166,154,0.16)', memContainer: '#B2DFDB',
     },
     blue: {
         primary: '#1B6EF3', onPrimary: '#fff', primaryContainer: '#D6E3FF', onPrimaryContainer: '#001B3E',
         primary08: 'rgba(27,110,243,0.08)', primary12: 'rgba(27,110,243,0.12)',
-        secondary: '#565E71', secondaryContainer: '#DAE2F9', onSecondaryContainer: '#131C2B',
-        tertiary: '#006B5F', tertiaryContainer: '#74F8E2', onTertiaryContainer: '#00201C',
+        secondary: '#5F6368', secondaryContainer: '#E2E4E9', onSecondaryContainer: '#1A1C1E',
+        tertiary: '#8B5E3C', tertiaryContainer: '#FFDCC2', onTertiaryContainer: '#311400',
         error: '#BA1A1A', errorContainer: '#FFDAD6', onErrorContainer: '#410002',
         surface: '#FAFBFF', surfaceContainerLowest: '#FFFFFF', surfaceContainerLow: '#F3F4F9',
         surfaceContainer: '#EDEEF3', surfaceContainerHigh: '#E7E8ED', surfaceContainerHighest: '#E1E2E8',
         onSurface: '#1A1C20', onSurfaceVariant: '#44474E', outline: '#74777F', outlineVariant: '#C4C6D0',
-        good: '#1E6B34', goodContainer: '#A8F5AE', onGoodContainer: '#002109',
-        caution: '#6D5E00', cautionContainer: '#FBE365', onCautionContainer: '#211B00',
+        good: '#2E7D32', goodContainer: '#C8E6C9', onGoodContainer: '#002109',
+        caution: '#7B6B00', cautionContainer: '#F2E4A1', onCautionContainer: '#241A00',
         elev1: '0 1px 3px 1px rgba(0,0,0,0.12), 0 1px 2px 0 rgba(0,0,0,0.24)',
         elev2: '0 2px 6px 2px rgba(0,0,0,0.12), 0 1px 2px 0 rgba(0,0,0,0.24)',
         chartCpu: '#1B6EF3', chartCpuFill: 'rgba(27,110,243,0.18)',
-        chartMem: '#006B5F', chartMemFill: 'rgba(0,107,95,0.15)',
+        chartMem: '#26A69A', chartMemFill: 'rgba(38,166,154,0.16)', memContainer: '#B2DFDB',
     },
     green: {
-        primary: '#006C4C', onPrimary: '#fff', primaryContainer: '#89F8C7', onPrimaryContainer: '#002115',
-        primary08: 'rgba(0,108,76,0.08)', primary12: 'rgba(0,108,76,0.12)',
-        secondary: '#4D6356', secondaryContainer: '#CFE9D7', onSecondaryContainer: '#0A1F15',
-        tertiary: '#3D6373', tertiaryContainer: '#C1E8FB', onTertiaryContainer: '#001F29',
+        primary: '#00695C', onPrimary: '#fff', primaryContainer: '#B2DFDB', onPrimaryContainer: '#00201B',
+        primary08: 'rgba(0,105,92,0.08)', primary12: 'rgba(0,105,92,0.12)',
+        secondary: '#5F6368', secondaryContainer: '#E0E1E5', onSecondaryContainer: '#1A1C1E',
+        tertiary: '#6A5F8D', tertiaryContainer: '#E8DEF8', onTertiaryContainer: '#21005D',
         error: '#BA1A1A', errorContainer: '#FFDAD6', onErrorContainer: '#410002',
         surface: '#FBFDF8', surfaceContainerLowest: '#FFFFFF', surfaceContainerLow: '#F2F5EF',
         surfaceContainer: '#ECEFE9', surfaceContainerHigh: '#E6EAE4', surfaceContainerHighest: '#E1E4DE',
         onSurface: '#191C19', onSurfaceVariant: '#414942', outline: '#717971', outlineVariant: '#C1C9BF',
-        good: '#006C4C', goodContainer: '#89F8C7', onGoodContainer: '#002115',
-        caution: '#6D5E00', cautionContainer: '#FBE365', onCautionContainer: '#211B00',
+        good: '#2E7D32', goodContainer: '#C8E6C9', onGoodContainer: '#002109',
+        caution: '#7B6B00', cautionContainer: '#F2E4A1', onCautionContainer: '#241A00',
         elev1: '0 1px 3px 1px rgba(0,0,0,0.12), 0 1px 2px 0 rgba(0,0,0,0.24)',
         elev2: '0 2px 6px 2px rgba(0,0,0,0.12), 0 1px 2px 0 rgba(0,0,0,0.24)',
-        chartCpu: '#006C4C', chartCpuFill: 'rgba(0,108,76,0.18)',
-        chartMem: '#3D6373', chartMemFill: 'rgba(61,99,115,0.15)',
+        chartCpu: '#00695C', chartCpuFill: 'rgba(0,105,92,0.18)',
+        chartMem: '#26A69A', chartMemFill: 'rgba(38,166,154,0.16)', memContainer: '#B2DFDB',
     },
     rose: {
         primary: '#9A4057', onPrimary: '#fff', primaryContainer: '#FFD9E0', onPrimaryContainer: '#3F0017',
         primary08: 'rgba(154,64,87,0.08)', primary12: 'rgba(154,64,87,0.12)',
-        secondary: '#75565C', secondaryContainer: '#FFD9E0', onSecondaryContainer: '#2C151A',
+        secondary: '#6B5E60', secondaryContainer: '#F2E0E2', onSecondaryContainer: '#24191B',
         tertiary: '#7C5635', tertiaryContainer: '#FFDCC2', onTertiaryContainer: '#2E1500',
         error: '#BA1A1A', errorContainer: '#FFDAD6', onErrorContainer: '#410002',
         surface: '#FFFBFF', surfaceContainerLowest: '#FFFFFF', surfaceContainerLow: '#FBF0F1',
         surfaceContainer: '#F5EAEB', surfaceContainerHigh: '#F0E4E6', surfaceContainerHighest: '#EADFE0',
         onSurface: '#201A1B', onSurfaceVariant: '#524345', outline: '#847375', outlineVariant: '#D7C1C4',
-        good: '#386A20', goodContainer: '#C3EFAB', onGoodContainer: '#042100',
-        caution: '#6D5E00', cautionContainer: '#FBE365', onCautionContainer: '#211B00',
+        good: '#2E7D32', goodContainer: '#C8E6C9', onGoodContainer: '#042100',
+        caution: '#7B6B00', cautionContainer: '#F2E4A1', onCautionContainer: '#241A00',
         elev1: '0 1px 3px 1px rgba(0,0,0,0.12), 0 1px 2px 0 rgba(0,0,0,0.24)',
         elev2: '0 2px 6px 2px rgba(0,0,0,0.12), 0 1px 2px 0 rgba(0,0,0,0.24)',
         chartCpu: '#9A4057', chartCpuFill: 'rgba(154,64,87,0.20)',
-        chartMem: '#7C5635', chartMemFill: 'rgba(124,86,53,0.16)',
+        chartMem: '#26A69A', chartMemFill: 'rgba(38,166,154,0.16)', memContainer: '#B2DFDB',
     },
     dark: {
         primary: '#D0BCFF', onPrimary: '#381E72', primaryContainer: '#4F378B', onPrimaryContainer: '#EADDFF',
@@ -192,12 +193,12 @@ const THEMES: Record<ThemeName, ThemeTokens> = {
         surface: '#141218', surfaceContainerLowest: '#0F0D13', surfaceContainerLow: '#1D1B20',
         surfaceContainer: '#211F26', surfaceContainerHigh: '#2B2930', surfaceContainerHighest: '#36343B',
         onSurface: '#E6E0E9', onSurfaceVariant: '#CAC4D0', outline: '#938F99', outlineVariant: '#49454F',
-        good: '#A1D395', goodContainer: '#1E5A0E', onGoodContainer: '#B7F397',
-        caution: '#E4C54A', cautionContainer: '#514600', onCautionContainer: '#FBE365',
+        good: '#81C784', goodContainer: '#1B5E20', onGoodContainer: '#A5D6A7',
+        caution: '#E4C54A', cautionContainer: '#514600', onCautionContainer: '#F2E4A1',
         elev1: '0 1px 3px 1px rgba(0,0,0,0.4), 0 1px 2px 0 rgba(0,0,0,0.6)',
         elev2: '0 2px 6px 2px rgba(0,0,0,0.4), 0 1px 2px 0 rgba(0,0,0,0.6)',
         chartCpu: '#D0BCFF', chartCpuFill: 'rgba(208,188,255,0.20)',
-        chartMem: '#EFB8C8', chartMemFill: 'rgba(239,184,200,0.16)',
+        chartMem: '#4DB6AC', chartMemFill: 'rgba(77,182,172,0.18)', memContainer: '#00493E',
     },
 }
 
@@ -248,6 +249,9 @@ const getStyles = (t: ThemeTokens): string => `
 
     --md-elev-1: ${t.elev1};
     --md-elev-2: ${t.elev2};
+
+    --md-mem:           ${t.chartMem};
+    --md-mem-container: ${t.memContainer};
 
     --md-corner-xs:   4px;
     --md-corner-s:    8px;
@@ -374,7 +378,7 @@ const getStyles = (t: ThemeTokens): string => `
   .summary-card:nth-child(1) .summary-icon-wrap { background: var(--md-primary-container); color: var(--md-on-primary-container); }
   .summary-card:nth-child(2) .summary-icon-wrap { background: var(--md-good-container); color: var(--md-on-good-container); }
   .summary-card:nth-child(3) .summary-icon-wrap { background: var(--md-tertiary-container); color: var(--md-on-tertiary-container); }
-  .summary-card:nth-child(4) .summary-icon-wrap { background: var(--md-secondary-container); color: var(--md-on-secondary-container); }
+  .summary-card:nth-child(4) .summary-icon-wrap { background: var(--md-mem-container); color: var(--md-mem); }
 
   .summary-text {
     display: flex;
@@ -612,7 +616,7 @@ const getStyles = (t: ThemeTokens): string => `
     min-width: 2px;
   }
   .bar-primary  { background: var(--md-primary); }
-  .bar-tertiary { background: var(--md-tertiary); }
+  .bar-mem      { background: var(--md-mem); }
   .bar-error    { background: var(--md-error); }
 
   /* — Chart — */
@@ -694,88 +698,95 @@ const getStyles = (t: ThemeTokens): string => `
 // Chart Script
 // =====================================================================
 const getChartScript = (): string => `
-  document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.trend-chart').forEach(function(canvas) {
-      try {
-        var raw = decodeURIComponent(canvas.getAttribute('data-cpu-mem') || '[]');
-        drawChart(canvas, JSON.parse(raw));
-      } catch(e) { console.error(e); }
-    });
-  });
+  (function() {
+    function drawChart(canvas) {
+      var raw = canvas.getAttribute('data-cpu-mem') || '[]';
+      var data;
+      try { data = JSON.parse(decodeURIComponent(raw)); } catch(e) { data = []; }
 
-  function drawChart(canvas, data) {
-    var ctx = canvas.getContext('2d');
-    var dpr = window.devicePixelRatio || 2;
-    var rect = canvas.getBoundingClientRect();
-    canvas.width  = rect.width  * dpr;
-    canvas.height = rect.height * dpr;
-    ctx.scale(dpr, dpr);
-    var W = rect.width, H = rect.height;
-    ctx.clearRect(0, 0, W, H);
+      var ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      var dpr = window.devicePixelRatio || 2;
+      var rect = canvas.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      canvas.width  = rect.width  * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+      var W = rect.width, H = rect.height;
 
-    if (!data || data.length === 0) {
-      ctx.fillStyle = '#79747E';
-      ctx.font = '500 11px "Google Sans", Roboto, "Noto Sans SC", sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('暂无趋势数据', W / 2, H / 2);
-      return;
-    }
-
-    var pad = 4, cW = W - pad * 2, cH = H - pad * 2;
-
-    function smooth(points) {
-      if (points.length < 3) return points;
-      var result = [points[0]];
-      for (var i = 1; i < points.length - 1; i++) {
-        result.push({
-          x: points[i].x,
-          y: points[i-1].y * 0.15 + points[i].y * 0.7 + points[i+1].y * 0.15
-        });
+      if (!data || data.length === 0) {
+        var emptyColor = canvas.getAttribute('data-chart-empty') || '#79747E';
+        ctx.fillStyle = emptyColor;
+        ctx.font = '500 11px Roboto, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('暂无趋势数据', W / 2, H / 2);
+        return;
       }
-      result.push(points[points.length - 1]);
-      return result;
+
+      var pad = 4, cW = W - pad * 2, cH = H - pad * 2;
+
+      function smooth(pts) {
+        if (pts.length < 3) return pts;
+        var r = [pts[0]];
+        for (var i = 1; i < pts.length - 1; i++) {
+          r.push({ x: pts[i].x, y: pts[i-1].y * 0.15 + pts[i].y * 0.7 + pts[i+1].y * 0.15 });
+        }
+        r.push(pts[pts.length - 1]);
+        return r;
+      }
+
+      function drawLine(key, stroke, fillColor) {
+        if (!data.some(function(d){ return d[key] !== undefined; })) return;
+        var points = data.map(function(item, i) {
+          return {
+            x: pad + (i / Math.max(data.length - 1, 1)) * cW,
+            y: pad + cH - ((item[key] || 0) / 100) * cH
+          };
+        });
+        points = smooth(points);
+
+        ctx.beginPath();
+        for (var i = 0; i < points.length; i++) {
+          i === 0 ? ctx.moveTo(points[i].x, points[i].y) : ctx.lineTo(points[i].x, points[i].y);
+        }
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = stroke;
+        ctx.stroke();
+
+        ctx.lineTo(pad + cW, pad + cH);
+        ctx.lineTo(pad, pad + cH);
+        ctx.closePath();
+        var grad = ctx.createLinearGradient(0, 0, 0, H);
+        grad.addColorStop(0, fillColor);
+        grad.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad;
+        ctx.fill();
+      }
+
+      var cpuColor = canvas.getAttribute('data-chart-cpu') || '#6750A4';
+      var memColor = canvas.getAttribute('data-chart-mem') || '#7D5260';
+      var cpuFill  = canvas.getAttribute('data-chart-cpu-fill') || 'rgba(103,80,164,0.20)';
+      var memFill  = canvas.getAttribute('data-chart-mem-fill') || 'rgba(125,82,96,0.16)';
+      drawLine('mem', memColor, memFill);
+      drawLine('cpu', cpuColor, cpuFill);
     }
 
-    function drawLine(key, stroke, gradTop, gradBot) {
-      if (!data.some(function(d){ return d[key] !== undefined; })) return;
-
-      var points = data.map(function(item, i) {
-        return {
-          x: pad + (i / Math.max(data.length - 1, 1)) * cW,
-          y: pad + cH - ((item[key] || 0) / 100) * cH
-        };
-      });
-      points = smooth(points);
-
-      ctx.beginPath();
-      points.forEach(function(p, i) {
-        i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
-      });
-      ctx.lineJoin = 'round';
-      ctx.lineCap = 'round';
-      ctx.lineWidth = 1.5;
-      ctx.strokeStyle = stroke;
-      ctx.stroke();
-
-      // Fill area
-      ctx.lineTo(pad + cW, pad + cH);
-      ctx.lineTo(pad, pad + cH);
-      ctx.closePath();
-      var grad = ctx.createLinearGradient(0, 0, 0, H);
-      grad.addColorStop(0, gradTop);
-      grad.addColorStop(1, gradBot);
-      ctx.fillStyle = grad;
-      ctx.fill();
+    function initAll() {
+      var canvases = document.querySelectorAll('.trend-chart');
+      for (var i = 0; i < canvases.length; i++) {
+        try { drawChart(canvases[i]); } catch(e) { console.error(e); }
+      }
     }
 
-    var cpuColor = canvas.getAttribute('data-chart-cpu') || '#6750A4';
-    var memColor = canvas.getAttribute('data-chart-mem') || '#7D5260';
-    var cpuFill  = canvas.getAttribute('data-chart-cpu-fill') || 'rgba(103,80,164,0.20)';
-    var memFill  = canvas.getAttribute('data-chart-mem-fill') || 'rgba(125,82,96,0.16)';
-    drawLine('mem', memColor, memFill, memFill.replace(/[\d.]+\)$/, '0.0)'));
-    drawLine('cpu', cpuColor, cpuFill, cpuFill.replace(/[\d.]+\)$/, '0.0)'));
-  }
+    if (document.readyState !== 'loading') {
+      initAll();
+    } else {
+      document.addEventListener('DOMContentLoaded', initAll);
+    }
+  })();
 `
 
 // =====================================================================
@@ -794,7 +805,7 @@ const renderNodeCard = (node: NodeInfo, highLoadThreshold: number, t: ThemeToken
     else if (isHighLoad) { pillClass = 'status-warn'; pillText = '高负载' }
 
     const cpuBarCls = cpuPct > 80 ? 'progress-bar bar-error' : 'progress-bar bar-primary'
-    const memBarCls = memPct > 85 ? 'progress-bar bar-error' : 'progress-bar bar-tertiary'
+    const memBarCls = memPct > 85 ? 'progress-bar bar-error' : 'progress-bar bar-mem'
     const memUsed = node.memoryUsage ? node.memoryUsage.toFixed(1) : '0'
     const memTotal = node.maxMemory ? node.maxMemory.toFixed(1) : '0'
 
@@ -866,7 +877,7 @@ const renderNodeCard = (node: NodeInfo, highLoadThreshold: number, t: ThemeToken
             </div>
           </div>
           <div class="chart-canvas-wrap">
-            <canvas class="trend-chart" data-cpu-mem="${encodeURIComponent(JSON.stringify(node.cpuMemChart || []))}" data-chart-cpu="${t.chartCpu}" data-chart-mem="${t.chartMem}" data-chart-cpu-fill="${t.chartCpuFill}" data-chart-mem-fill="${t.chartMemFill}" width="240" height="64"></canvas>
+            <canvas class="trend-chart" data-cpu-mem="${encodeURIComponent(JSON.stringify(node.cpuMemChart || []))}" data-chart-cpu="${t.chartCpu}" data-chart-mem="${t.chartMem}" data-chart-cpu-fill="${t.chartCpuFill}" data-chart-mem-fill="${t.chartMemFill}" data-chart-empty="${t.outline}" width="240" height="64"></canvas>
           </div>
         </div>
       </div>
@@ -976,12 +987,13 @@ export function generateHtml(
 export async function renderToImage(ctx: Context, html: string): Promise<Buffer> {
     const page = await ctx.puppeteer.page()
     try {
-        await page.setContent(html, { waitUntil: 'networkidle0' })
+        // 必须先设置视口再加载内容，否则 canvas 绘制后被视口变化清空
         await page.setViewport({
             width: 960,
             height: 600,
             deviceScaleFactor: 2
         })
+        await page.setContent(html, { waitUntil: 'networkidle0' })
         return await page.screenshot({ type: 'png', fullPage: true })
     } finally {
         await page.close().catch(() => { })

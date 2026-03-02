@@ -1,5 +1,5 @@
 import { Context, Schema, Session, segment } from 'koishi'
-import { NodeInfo, InstanceInfo, generateHtml, renderToImage } from './render'
+import { NodeInfo, InstanceInfo, generateHtml, renderToImage, ThemeName } from './render'
 
 declare module 'koishi' {
   interface Context {
@@ -27,7 +27,8 @@ export interface Config {
   proxyAPIUrl?: string
   daemonUuid?: string
   title?: string
-  theme?: 'purple' | 'blue' | 'green' | 'rose' | 'dark'
+  theme?: 'purple' | 'blue' | 'green' | 'rose' | 'dark' | 'random'
+  autoDark?: boolean
   highLoadThreshold?: number
   timeout?: number
 }
@@ -39,7 +40,8 @@ export const Config: Schema<Config> = Schema.object({
   proxyAPIUrl: Schema.string().description('代理API地址').default(''),
   daemonUuid: Schema.string().description('节点Daemon ID，留空获取所有节点'),
   title: Schema.string().description('页面标题').default('MCSManager 节点状态'),
-  theme: Schema.union(['purple', 'blue', 'green', 'rose', 'dark']).description('主题配色').default('blue'),
+  theme: Schema.union(['purple', 'blue', 'green', 'rose', 'dark', 'random']).description('主题配色（random 为随机）').default('blue'),
+  autoDark: Schema.boolean().description('夜间自动切换暗色主题（19:00-06:00）').default(false),
   highLoadThreshold: Schema.number().description('高负载阈值（百分比）').default(85),
   timeout: Schema.number().description('API请求超时时间（毫秒）').default(10000),
 })
@@ -145,6 +147,19 @@ export async function apply(ctx: Context, config: Config) {
     ctx.logger.warn('所有字体源均不可用，将使用系统字体')
   }
 
+  const RANDOM_THEMES: ThemeName[] = ['purple', 'blue', 'green', 'rose']
+  const resolveTheme = (): ThemeName => {
+    // 夜间自动暗色 (19:00 - 06:00)
+    if (config.autoDark) {
+      const hour = new Date().getHours()
+      if (hour >= 19 || hour < 6) return 'dark'
+    }
+    if (config.theme === 'random') {
+      return RANDOM_THEMES[Math.floor(Math.random() * RANDOM_THEMES.length)]
+    }
+    return (config.theme as ThemeName) || 'blue'
+  }
+
   // ─── Official API command ─────────────────────────────────────────
   ctx.command('mcsm-status', '获取MCSM节点状态')
     .action(async ({ session }: { session: Session }) => {
@@ -179,7 +194,7 @@ export async function apply(ctx: Context, config: Config) {
           fetchInstances().catch(err => { ctx.logger.error('获取实例列表时出错:', err); return [] as InstanceInfo[] }),
         ])
 
-        const html = generateHtml(nodes, instances, config.title, config.highLoadThreshold || 85, fontCSS, config.theme || 'blue')
+        const html = generateHtml(nodes, instances, config.title, config.highLoadThreshold || 85, fontCSS, resolveTheme())
         const buf = await renderToImage(ctx, html)
         return segment.image('data:image/png;base64,' + buf.toString('base64'))
       } catch (error) {
@@ -221,7 +236,7 @@ export async function apply(ctx: Context, config: Config) {
             fetchInstances().catch(err => { ctx.logger.error('获取实例列表时出错:', err); return [] as InstanceInfo[] }),
           ])
 
-          const html = generateHtml(nodes, instances, config.title, config.highLoadThreshold || 85, fontCSS, config.theme || 'blue')
+          const html = generateHtml(nodes, instances, config.title, config.highLoadThreshold || 85, fontCSS, resolveTheme())
           const buf = await renderToImage(ctx, html)
           return segment.image('data:image/png;base64,' + buf.toString('base64'))
         } catch (error) {

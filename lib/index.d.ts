@@ -29,7 +29,8 @@ export interface Config {
     proxyAPIUrl?: string;
     daemonUuid?: string;
     title?: string;
-    theme?: 'purple' | 'blue' | 'green' | 'rose' | 'dark';
+    theme?: 'purple' | 'blue' | 'green' | 'rose' | 'dark' | 'random';
+    autoDark?: boolean;
     highLoadThreshold?: number;
     timeout?: number;
 }
