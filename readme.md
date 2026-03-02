@@ -4,4 +4,4 @@
 
 Koishi 插件，用于获取 MCSManager 面板节点状态并渲染为图片。
 
-> 使用Qwen3-Coder协助完成
+> 使用 Claude-Opus-4.6 协助完成
